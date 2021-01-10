@@ -8,8 +8,12 @@ class MyCpu():
   stack: deque()
   mem: []
   inst: inst.Instructions
+  breakpoints: []
+  regbp: []
 
   def __init__(self):
+    self.breakpoints = []
+    self.regbp = []
     self.inst = inst.Instructions(self)
     self.mem = dict()
     self.reg = {"ip": 0}
@@ -54,6 +58,9 @@ class MyCpu():
       self.reg["ip"] += 1
 
   def _execute(self):
+    if self.reg["ip"] in self.breakpoints:
+      self.debug = True
+      print("**** Breakpoint ****")
     if self.debug:
       if "debug" in self.callbacks.keys():
         self.callbacks["debug"][0]()
@@ -91,13 +98,19 @@ class MyCpu():
   def _getValPar(self, n: int):
       val = self.mem[self.reg["ip"]+1+n]
       if val <= 32767:
-          return val
+        return val
       elif 32767 < val <= 32775:
-          return self.reg[val-32768]
+        if (val-32768) in self.regbp:
+          print(f"Breakpont read r{val-32768} at {self.reg['ip']}")
+          self.debug = True
+        return self.reg[val-32768]
       assert(0)
       return None
 
   def _setRegister(self, n, val):
       r = self.mem[self.reg["ip"]+n+1]
       assert(r >= 32768)
+      if (r-32768) in self.regbp:
+          print(f"Breakpont write r{r-32768} at {self.reg['ip']}")
+          self.debug = True
       self.reg[r-32768] = val
