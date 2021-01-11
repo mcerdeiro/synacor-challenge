@@ -9,6 +9,7 @@ I found the challenge awsome. Many thanks an Eric and Synacor for making it poss
 
 The embedded debugger implements the following commands:
 
+```
   autorun   Executes the commands indicated in the file commands.
             The file may contain additionally following commands:
             "break" stops the further execution
@@ -23,17 +24,20 @@ The embedded debugger implements the following commands:
   set ip|rn val  Set the indicated register (r0-r7) or the ip to the
             indicated value
   st        Stack trace, prints the current content of the stack.
+```
 
+## SPOILER
 
-[SPOILER]
 Stop reading if you do not want to know about how to solve the puzzle/s.
 
 ## Debugger
 
 The debugger command autorun accepts one more option within the commands file:
 
+```
             "solve6027" solve the teleport puzzle by changing the
             instructions at ip 6027.
+```
 
 ## Codes
 
