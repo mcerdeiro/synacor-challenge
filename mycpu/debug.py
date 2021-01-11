@@ -8,11 +8,13 @@ class Debug():
   debug = False
   tele = -1
   lastcmd = ""
+  autorun = False
+  autoruncount = 0
+  autoruncmds = None
   
   completestdouts = deque()
   currentstdout = ""
   vault: int
-  waitinst = None
 
   def __init__(self, cpu, memdump):
     self.cpu = cpu
@@ -23,7 +25,9 @@ class Debug():
     self.memdump = memdump
     self.lastcmd = ""
     self.vault = 0
-    self.waitinst = None
+    self.autorun = False
+    self.autoruncount = 0
+    self.autoruncmds = None
     self.lookup = {
         0: { "n": "halt", "p": 0, "d": "" },
         1: { "n": "set", "p": 2, "d": "", "s": "p0 = p1" },
@@ -71,6 +75,29 @@ class Debug():
     if self.vault == 1:
       self.cpu.debug = True
       return "east"
+    if self.autorun == True:
+      if self.autoruncount == 0:
+        self.autoruncmds = open("commands").read().splitlines()
+      if self.autoruncount >= len(self.autoruncmds):
+        self.autorun = False
+        return
+      again = True
+      tmp = ""
+      while again:
+        again = False
+        tmp = self.autoruncmds[self.autoruncount]
+        if tmp == "solve6027":
+          self.cpu.solve6027()
+          again = True
+        elif tmp == "break":
+          self.autorun = False
+          return
+        else:
+          pass
+        self.autoruncount += 1
+
+      return tmp
+
     return None
 
   def _rb(self, opt = ""):
@@ -138,20 +165,32 @@ class Debug():
   def _stacktrace(self, opt):
     print("Stack:", self.cpu.stack)
 
-  def waitCmd(self, opt):
-    self.waitinst = opt
-    print("Waiting for:", self.waitinst)
+  def _help(self, notused):
+    print("""
+Debugger provies the following commands:
 
-  def waitInst(self):
-    if self.waitinst == None:
-      return False
-    return True
+  autorun   Executes the commands indicated in the file commands.
+            The file may contain additionally following commands:
+            "break" stops the further execution
+            "solve6027" solve the teleport puzzel by changing the
+            instructions at ip 6027.
+  b addr    Set a breakpint at address addr.
+  rb idx    Register breakpoint sets a read write breakpoint when
+            register idx (0-7) is read or written.
+  cont      Continues the execution (exits debugger mode)
+  d [n]     Disassemble instructions starting at the current ip.
+            The default value for n is 1.
+  n         Next, executes one instructions
+  p         Prints the current state of the registers.
+  set ip|rn val  Set the indicated register (r0-r7) or the ip to the
+            indicated value
+  st        Stack trace, prints the current content of the stack.
+
+    """)
 
   def debugConsole(self):
     self._p()
     self._dissas("1")
-    if self.waitInst():
-      return
     contdebug = True
     while contdebug:
       val = input("> ")
@@ -167,7 +206,7 @@ class Debug():
         "rb": self._rb,
         "st": self._stacktrace,
         "set": self._changevar,
-        "w": self.waitCmd
+        "help": self._help
       }
       dcmd = val.split()[0]
       drest = ""
@@ -183,31 +222,20 @@ class Debug():
       elif val == "tele off":
         self.tele = 0
         self.cpu.debug = False
+      elif val == "vault":
+        self.vault = 1
+      elif val == "cont":
+        self.cpu.debug = False
+      elif val == "p":
+        self._p()
+      elif val == "autorun":
+        self.autorun = True
+        self.cpu.debug = False
+
       else:
         print("Unkown command, try help")
 
 
   def keycallback(self, key):
     if key == b'\x1bOP': #F1
-      if self.debug:
-        self.debug = False
-      else:
-        self.debug = True
-      print("Debug:", self.debug)
-
-    if self.debug:
-      #print("Key", key)
-      if key == b'\x1bOQ':
-        cont = True
-        while cont:
-          cmd = input("Debug command: ")
-          if cmd == "console":
-            self.cpu.debug = True
-          if cmd == "vault":
-            self.vault = 1
-          if cmd == "cont":
-            cont = False
-          if cmd == "p":
-            self._p()
-          if cmd == "tele":
-            self.tele = 1
+      self.cpu.debug = True

@@ -11,6 +11,20 @@ class MyCpu():
   breakpoints: []
   regbp: []
 
+  def solve6027(self):
+    #set r7
+    self.reg[7] = 25734
+    #set r0 6
+    self.mem[6027] = 1
+    self.mem[6028] = 32768
+    self.mem[6029] = 6
+    #set r7 25734
+    self.mem[6030] = 1
+    self.mem[6031] = 32768+7
+    self.mem[6032] = 25734
+    #ret
+    self.mem[6033] = 18
+
   def __init__(self):
     self.breakpoints = []
     self.regbp = []
