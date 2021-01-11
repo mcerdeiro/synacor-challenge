@@ -5,6 +5,17 @@ This is an implementation of the [Synacor Challenge](https://challenge.synacor.c
 
 I found the challenge awsome. Many thanks an Eric and Synacor for making it possible. :)
 
+## Commands
+
+The VM handles the following extra commands/keys:
+
+```
+ 4 Arrows   To move to north, east, south and east
+ F1         Starts the debugger console
+ F9         Loads the memory, stack and register state from stored.bin
+ F12        Stores the current state of memory, stack and register into stored.bin
+```
+
 ## Debugger
 
 The embedded debugger implements the following commands:
